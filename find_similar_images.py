@@ -50,8 +50,9 @@ def find_similar_images(userpath):
         if verbose:
             print(img)
         hl = []
+        imgdata = Image.open(img)
         for i in range(len(hashfuncs)):
-            hash = str(hashfuncs[i](Image.open(img)))
+            hash = str(hashfuncs[i](imgdata))
             hl += [hash]
             imghashes[i][hash] = imghashes[i].get(hash, []) + [img]
         imgfiles[img] = hl
