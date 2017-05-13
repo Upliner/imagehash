@@ -5,7 +5,7 @@ import imagehash, os
 
 import imagehash
 
-hashfuncs = [imagehash.average_hash, imagehash.phash, imagehash.dhash, imagehash.whash, lambda img: imagehash.whash(img, mode='db4')]
+hashfuncs = [imagehash.average_hash, imagehash.phash, imagehash.dhash, imagehash.whash]
 
 verbose = True
 
@@ -13,6 +13,22 @@ verbose = True
 Demo of hashing
 """
 def find_similar_images(userpath):
+    imghashes = [{} for i in hashfuncs]
+    imgfiles = {}
+    try:
+        with open("hashes.txt","r") as f:
+            for line in f:
+                hl = line.rstrip("\n").split("\t")
+                if len(hl) < len(hashfuncs)+1:
+                    continue
+                if not hl[0].startswith(userpath):
+                    continue
+                imgfiles[hl[0]] = hl[1:]
+                for i in range(len(hashfuncs)):
+                    imghashes[i][hl[i+1]] = imghashes[i].get(hl[i+1],[]) + [hl[0]]
+    except:
+        pass
+    hashfile = open("hashes.txt","a")
 
     def is_image(filename):
         f = filename.lower()
@@ -62,21 +78,6 @@ Identifies similar images in the directory.
 (C) Michael Vigovsky, 2017
 """ % sys.argv[0])
         sys.exit(1)
-
-    imghashes = [{} for i in hashfuncs]
-    imgfiles = {}
-    try:
-        with open("hashes.txt","r") as f:
-            for line in f:
-                hl = line.rstrip("\n").split("\t")
-                if len(hl) != len(hashfuncs)+1:
-                    continue
-                imgfiles[hl[0]] = hl[1:]
-                for i in range(len(hashfuncs)):
-                    imghashes[i][hl[i+1]] = imghashes[i].get(hl[i+1],[]) + [hl[0]]
-    except:
-        pass
-    hashfile = open("hashes.txt","a")
 
     userpath = sys.argv[1] if len(sys.argv) > 1 else "."
     find_similar_images(userpath=userpath)
