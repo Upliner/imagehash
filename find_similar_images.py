@@ -23,6 +23,8 @@ def find_similar_images(userpath):
                     continue
                 if not hl[0].startswith(userpath):
                     continue
+                if not os.path.isfile(hl[0]):
+                    continue
                 imgfiles[hl[0]] = hl[1:]
                 for i in range(len(hashfuncs)):
                     imghashes[i][hl[i+1]] = imghashes[i].get(hl[i+1],[]) + [hl[0]]
@@ -45,14 +47,14 @@ def find_similar_images(userpath):
     for img in image_filenames:
         if img in imgfiles:
             continue
+        if verbose:
+            print(img)
         hl = []
         for i in range(len(hashfuncs)):
             hash = str(hashfuncs[i](Image.open(img)))
             hl += [hash]
             imghashes[i][hash] = imghashes[i].get(hash, []) + [img]
         imgfiles[img] = hl
-        if verbose:
-            print(img)
         hashfile.write(img + "\t" + "\t".join(hl) + "\n")
         hashfile.flush()
 
