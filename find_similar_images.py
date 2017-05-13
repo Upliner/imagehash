@@ -1,33 +1,42 @@
 #!/usr/bin/env python
 from __future__ import (absolute_import, division, print_function)
 from PIL import Image
-import six
+import six, imagehash, os
 
 import imagehash
 
+verbose = True
 """
 Demo of hashing
 """
 def find_similar_images(userpath, hashfunc = imagehash.average_hash):
-    import os
+
     def is_image(filename):
         f = filename.lower()
         return f.endswith(".png") or f.endswith(".jpg") or \
             f.endswith(".jpeg") or f.endswith(".bmp") or f.endswith(".gif")
-    
-    image_filenames = [os.path.join(userpath, path) for path in os.listdir(userpath) if is_image(path)]
+
+    def walk(path):
+        for tup in os.walk(path):
+            for f in tup[2]:
+                if is_image(f):
+                    yield tup[0]+"/"+f
+
+    image_filenames = walk(userpath)
     images = {}
-    for img in sorted(image_filenames):
+    for img in image_filenames:
         hash = hashfunc(Image.open(img))
+        if verbose:
+             print(img + " " + str(hash))
         images[hash] = images.get(hash, []) + [img]
-    
+
     for k, img_list in six.iteritems(images):
         if len(img_list) > 1:
             print(" ".join(img_list))
 
 
 if __name__ == '__main__':
-    import sys, os
+    import sys
     def usage():
         sys.stderr.write("""SYNOPSIS: %s [ahash|phash|dhash|...] [<directory>]
 
@@ -43,7 +52,7 @@ Method:
 (C) Johannes Buchner, 2013-2017
 """ % sys.argv[0])
         sys.exit(1)
-    
+
     hashmethod = sys.argv[1] if len(sys.argv) > 1 else usage()
     if hashmethod == 'ahash':
         hashfunc = imagehash.average_hash
@@ -59,5 +68,3 @@ Method:
         usage()
     userpath = sys.argv[2] if len(sys.argv) > 2 else "."
     find_similar_images(userpath=userpath, hashfunc=hashfunc)
-    
-
